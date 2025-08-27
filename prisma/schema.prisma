@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+model admin_logs {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  admin_id   String?   @db.Uuid
+  action     String?   @db.String(255)
+  admins     admins?   @relation(fields: [admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_admin_logs_admin")
+}
+
+model admins {
+  id                         String       @id @default(uuid()) @db.Uuid
+  created_at                 DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?    @default(now()) @db.Timestamptz(6)
+  checkin_access             Boolean?     @default(false)
+  anticheat_access           Boolean?     @default(false)
+  qrmgmt_access              Boolean?     @default(false)
+  question_management_access Boolean?     @default(false)
+  communication_access       Boolean?     @default(false)
+  user_id                    String?      @unique(map: "uni_admins_user_id") @db.Uuid
+  admin_logs                 admin_logs[]
+  users                      users?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_admins_user")
+  qr_data                    qr_data[]
+}
+
+model answers {
+  id               String          @id @default(uuid()) @db.Uuid
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  answer           String?
+  type             AnswerType?
+  question_part_id String?         @unique(map: "uni_answers_question_part_id") @db.Uuid
+  question_parts   question_parts? @relation(fields: [question_part_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_question_parts_answer")
+  qr_data          qr_data[]
+}
+
+model attendances {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  user_id    String?   @unique(map: "uni_attendances_user_id") @db.Uuid
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_attendances_user")
+}
+
+model bases {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model contents {
+  id               String          @id @default(uuid()) @db.Uuid
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  type             String?
+  data             String?
+  sequence         BigInt?         @default(0)
+  question_part_id String?         @db.Uuid
+  platform         EnumPlatform?
+  question_parts   question_parts? @relation(fields: [question_part_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_question_parts_content")
+}
+
+model cron_jobs {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  phase_id   String    @db.Uuid
+  job_name   String    @db.String(255)
+  start_time DateTime  @db.Timestamptz(6)
+  api_route  String    @db.String(255)
+}
+
+model difficulties {
+  id         String      @id @default(uuid()) @db.Uuid
+  created_at DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?   @default(now()) @db.Timestamptz(6)
+  level      BigInt?     @unique(map: "uni_difficulties_level")
+  points     BigInt?
+  questions  questions[]
+}
+
+model flags {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  name       String?   @db.String(255)
+  value      Boolean?
+}
+
+model hints {
+  id               String          @id @default(uuid()) @db.Uuid
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  data             String?
+  cost             BigInt?         @default(0)
+  question_part_id String?         @unique(map: "uni_hints_question_part_id") @db.Uuid
+  question_parts   question_parts? @relation(fields: [question_part_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_question_parts_hint")
+}
+
+model notification_logs {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  user_id    String    @db.Uuid
+  body       String?
+  reason     String?
+  sent_at    DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model notifications {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  title      String?
+  body       String?
+  sent_at    DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model phases {
+  id         String      @id @default(uuid()) @db.Uuid
+  created_at DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?   @default(now()) @db.Timestamptz(6)
+  phase      BigInt?     @unique(map: "uni_phases_phase")
+  start_time DateTime?   @unique(map: "uni_phases_start_time") @default(now()) @db.Timestamptz(6)
+  questions  questions[]
+}
+
+model point_ledgers {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  points     BigInt?
+  team_id    String?   @db.Uuid
+  text       String?
+  timestamp  DateTime? @default(now()) @db.Timestamp(6)
+  teams      teams?    @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_point_ledgers_team")
+}
+
+model purchased_hints {
+  id               String          @id @default(uuid()) @db.Uuid
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  question_part_id String?         @db.Uuid
+  team_id          String?         @db.Uuid
+  question_parts   question_parts? @relation(fields: [question_part_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_purchased_hints_question_part")
+  teams            teams?          @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_purchased_hints_team")
+
+  @@unique([question_part_id, team_id], map: "idx_part_team")
+}
+
+model qr_data {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  value      String?   @unique(map: "uni_qr_data_value")
+  qr_photo   String?   @unique(map: "uni_qr_data_qr_photo")
+  latitude   Float?
+  longitude  Float?
+  timestamp  DateTime? @db.Timestamptz(6)
+  damaged    Boolean?  @default(false)
+  answer_id  String?   @db.Uuid
+  admin_id   String?   @db.Uuid
+  answers    answers?  @relation(fields: [answer_id], references: [id], onUpdate: NoAction, map: "fk_answers_qr_data")
+  admins     admins?   @relation(fields: [admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_qr_data_admin")
+}
+
+model qr_photos {
+  id          String     @id @default(uuid()) @db.Uuid
+  created_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  photo_url   String?    @unique(map: "uni_qr_photos_photo_url")
+  response_id String?    @unique(map: "uni_qr_photos_response_id") @db.Uuid
+  responses   responses? @relation(fields: [response_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_responses_qr_photos")
+}
+
+model question_access_logs {
+  id               String          @id @default(uuid()) @db.Uuid
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  timestamp        DateTime?       @default(now()) @db.Timestamptz(6)
+  user_id          String?         @db.Uuid
+  question_part_id String?         @db.Uuid
+  question_parts   question_parts? @relation(fields: [question_part_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_question_access_logs_question_part")
+  users            users?          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_question_access_logs_user")
+}
+
+model question_parts {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  sequence             BigInt?                @default(0)
+  weightage            BigInt?                @default(0)
+  question_id          String?                @db.Uuid
+  last_revaluated_at   DateTime?              @db.Timestamptz(6)
+  answers              answers?
+  contents             contents[]
+  hints                hints?
+  purchased_hints      purchased_hints[]
+  question_access_logs question_access_logs[]
+  questions            questions?             @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_questions_parts")
+  responses            responses[]
+
+  @@unique([sequence, question_id], map: "idx_part_ques")
+}
+
+model questions {
+  id               String           @id @default(uuid()) @db.Uuid
+  created_at       DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?        @default(now()) @db.Timestamptz(6)
+  name             String?          @unique(map: "uni_questions_name") @db.String(25)
+  display          Boolean?         @default(false)
+  authors          String[]
+  difficulty_id    String?          @db.Uuid
+  phase_id         String?          @db.Uuid
+  first_blood_team String?          @db.Uuid
+  question_parts   question_parts[]
+  difficulties     difficulties?    @relation(fields: [difficulty_id], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_questions_difficulty")
+  phases           phases?          @relation(fields: [phase_id], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_questions_phase")
+  teams            teams?           @relation(fields: [first_blood_team], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_questions_team")
+}
+
+model responses {
+  id               String          @id @default(uuid()) @db.Uuid
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  data             String?
+  type             String?
+  latitude         Decimal?        @db.Decimal
+  longitude        Decimal?        @db.Decimal
+  timestamp        DateTime?       @db.Timestamptz(6)
+  question_part_id String?         @db.Uuid
+  user_id          String?         @db.Uuid
+  is_correct       Boolean?        @default(false)
+  qr_photos        qr_photos?
+  question_parts   question_parts? @relation(fields: [question_part_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_responses_question_part")
+  users            users?          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_responses")
+}
+
+model teams {
+  id              String            @id @default(uuid()) @db.Uuid
+  created_at      DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?         @default(now()) @db.Timestamptz(6)
+  name            String?           @unique(map: "uni_teams_name") @db.String(255)
+  code            String?           @unique(map: "uni_teams_code") @db.String(50)
+  blacklist       Boolean?          @default(false)
+  points          BigInt?           @default(0)
+  checked_in      Boolean?          @default(false)
+  is_imposter     Boolean?          @default(false)
+  point_ledgers   point_ledgers[]
+  purchased_hints purchased_hints[]
+  questions       questions[]
+  users           users[]
+}
+
+model timelines {
+  id          String    @id @default(uuid()) @db.Uuid
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  start_time  DateTime? @unique(map: "uni_timelines_start_time") @db.Timestamp(6)
+  end_time    DateTime? @unique(map: "uni_timelines_end_time") @db.Timestamp(6)
+  title       String    @unique(map: "uni_timelines_title") @db.String(255)
+  description String?
+}
+
+model user_details {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  gender     String?
+  phone      String?   @db.String(20)
+  user_id    String?   @unique(map: "uni_user_details_user_id") @db.Uuid
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_details_user")
+}
+
+model users {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  email                String?                @unique(map: "idx_users_email") @db.String(255)
+  name                 String?                @db.String(255)
+  team_id              String?                @db.Uuid
+  admins               admins?
+  attendances          attendances?
+  question_access_logs question_access_logs[]
+  responses            responses[]
+  user_details         user_details?
+  teams                teams?                 @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_teams_users")
+  whitelists           whitelists?
+}
+
+model whitelists {
+  id         String    @id @default(uuid()) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  email      String?   @unique(map: "uni_whitelists_email") @db.String(50)
+  name       String?   @db.String(50)
+  user_id    String?   @unique(map: "uni_whitelists_user_id") @db.Uuid
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_whitelists_user")
+}
+
+enum EnumPlatform {
+  WEB
+  MOBILE
+  BOTH
+}
+
+enum AnswerType {
+    QR
+    TEXT
+}
