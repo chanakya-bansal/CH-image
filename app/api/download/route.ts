@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const contents = await prisma.contents.findMany({
-  where: { platform: "WEB", type: { in: ["image", "link"] } },
+  where: { platform: {in:["WEB","BOTH"]}, type: { in: ["image", "link"] } },
   select: { id: true, data: true },
 });
 

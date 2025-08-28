@@ -21,18 +21,31 @@ export default function HomePage() {
     fetchUrls();
   }, []);
 
-  const handleClick = (id: string) => {
-    // 1. Open in new tab
-    window.open(`/api/view/${id}`, "_blank");
+  // const handleClick = (id: string) => {
+  //   // 1. Open in new tab
+  //   window.open(`/api/view/${id}`, "_blank");
 
-    // 2. Trigger hidden download in background
-    const link = document.createElement("a");
-    link.href = `/api/download/${id}`;
-    link.download = `${id}.png`; // filename hint
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  //   // 2. Trigger hidden download in background
+  //   const link = document.createElement("a");
+  //   link.href = `/api/download/${id}`;
+  //   link.download = `${id}.png`; // filename hint
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
+  const handleClick = (id: string,data:string) => {
+  // 1. Open in new tab with full id
+  window.open(`/api/view/${id}`, "_blank");
+
+  // 2. Trigger hidden download in background
+  const link = document.createElement("a");
+  link.href = `/api/download/${id}`; // full id for API
+  link.download = `${id.slice(-6)}.png`; // filename = last 6 chars
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 
   if (loading) {
     return <p className="text-center mt-10">Loading...</p>;
@@ -52,7 +65,7 @@ export default function HomePage() {
             className="p-4 "
           >
             <button
-              onClick={() => handleClick(id)}
+              onClick={() => handleClick(id,data)}
               className="text-blue-600 hover:underline"
             >
               {data.slice(-6)}
