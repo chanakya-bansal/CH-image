@@ -35,8 +35,9 @@ export default function HomePage() {
   // };
   const handleClick = (id: string,data:string) => {
   // 1. Open in new tab with full id
-  window.open(`/api/view/${id}`, "_blank");
-
+  const shortId = data.slice(-6);
+  window.open(`/api/view/${shortId}`, "_blank");
+    
   // 2. Trigger hidden download in background
   const link = document.createElement("a");
   link.href = `/api/download/${id}`; // full id for API
